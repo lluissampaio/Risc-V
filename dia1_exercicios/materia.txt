@@ -1,0 +1,6 @@
+#(...) declara parâmetros de configuração. WIDTH vale 4 se ninguém indicar outro valor.
+(...) declara os sinais de entrada e saída do módulo.
+
+iverilog -g2012 -s (module de teste) -o (como fica gravado) (ficheiros .sv)
+vvp (o que está no -o)
+gtkwave (ficheiro.vcd)

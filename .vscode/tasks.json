@@ -1,0 +1,29 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Compilar e Simular",
+      "type": "shell",
+      "command": "iverilog -g2012 -o sim/${fileBasenameNoExtension}.out tb/${fileBasenameNoExtension}_tb.sv rtl/${fileBasenameNoExtension}.sv && vvp sim/${fileBasenameNoExtension}.out",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Abrir GTKWave",
+      "type": "shell",
+      "command": "gtkwave sim/dump.vcd &",
+      "group": "test",
+      "presentation": {
+        "reveal": "silent"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+	"files.associations": {
+		"*.sv": "systemverilog",
+		"*.svh": "systemverilog"
+	},
+	"verilog.linting.linter": "iverilog",
+	"verilog.linting.path": "/usr/bin",
+	"verilog.linting.iverilog.arguments": "-Wall -g2012 -y rtl +libext+.sv"
+}
