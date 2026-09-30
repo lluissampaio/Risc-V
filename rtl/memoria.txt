@@ -1,0 +1,12 @@
+Uma word tem 32 bits, ou seja, 4 bytes.
+A memória é endereçada ao byte(byte-addressable), ou seja, cada incremento no endereço
+aponta para o byte seguinte.
+O endereço 0x00 guarda o byte 0
+O endereço 0x01 guarda o byte 1
+O endereço 0x02 guarda o byte 2
+...
+mem[0] guarda 0x00-0x03 
+mem[1] guarda 0x04-0x07 
+mem[2] guarda 0x08-0x0B 
+Ou seja, quando recebo um address para saber em que posição de mem está tenho de dividir por 4, logo
+tenho de dar shifft para a direita de 2. 

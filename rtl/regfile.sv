@@ -1,7 +1,7 @@
 module regfile (
     input  logic        clk,
     input  logic        we,           // write enable
-    input  logic [4:0]  rs1, rs2,    // endereços de leitura
+    input  logic [4:0]  rs1, rs2,     // endereços de leitura
     input  logic [4:0]  rd,           // endereço de escrita
     input  logic [31:0] wd,           // dado a escrever
     output logic [31:0] rd1, rd2      // dados lidos
