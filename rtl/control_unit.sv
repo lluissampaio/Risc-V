@@ -32,7 +32,9 @@ module control_unit (
             7'b0110011: // R-Type
                 begin
                     reg_write = 1'b1;
-                    mem_write = mem_read = branch = 1'b0;
+                    mem_write = 1'b0;
+                    mem_read = 1'b0;
+                    branch = 1'b0;
                     alu_src = 1'b0; 
                     case (funct3)
                         3'b000: alu_op = funct7_5 == 1'b0 ? ALU_ADD : ALU_SUB; 
@@ -48,7 +50,9 @@ module control_unit (
             7'b0010011: // I-Type
                 begin 
                     reg_write = 1'b1;
-                    mem_write = mem_read = branch = 1'b0;
+                    mem_write = 1'b0;
+                    mem_read = 1'b0;
+                    branch = 1'b0;
                     alu_src = 1'b1;
                     case (funct3)
                         3'b000: alu_op = ALU_ADD; 
@@ -63,15 +67,19 @@ module control_unit (
                 end    
             7'b0000011: // I-Type Loads   
                 begin
-                    reg_write = mem_read = 1'b1;
-                    mem_write = branch = 1'b0;
+                    reg_write = 1'b1;
+                    mem_read = 1'b1;
+                    mem_write = 1'b0;
+                    branch = 1'b0;
                     alu_src = 1'b1;
                     alu_op = ALU_ADD;
                 end    
             7'b0100011: // S-Type    
                 begin
-                    reg_write = mem_write = 1'b1;
-                    mem_read = branch = 1'b0;
+                    reg_write = 1'b1;
+                    mem_write = 1'b1;
+                    mem_read = 1'b0;
+                    branch = 1'b0;
                     alu_src = 1'b1;
                     alu_op = ALU_ADD;
                 end    
