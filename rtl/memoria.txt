@@ -10,3 +10,6 @@ mem[1] guarda 0x04-0x07
 mem[2] guarda 0x08-0x0B 
 Ou seja, quando recebo um address para saber em que posição de mem está tenho de dividir por 4, logo
 tenho de dar shifft para a direita de 2. 
+
+Em SystemVerilog, {} serve para “juntar bits”.
+{N{expr}} → repete expr N vezes

@@ -61,14 +61,14 @@ module control_unit (
                         3'b011: alu_op = ALU_SLTU;
                     endcase
                 end    
-            7'b0000011: // I-Type Loads   !!!lw only
+            7'b0000011: // I-Type Loads   
                 begin
                     reg_write = mem_read = 1'b1;
                     mem_write = branch = 1'b0;
                     alu_src = 1'b1;
                     alu_op = ALU_ADD;
                 end    
-            7'b0100011: // S-Type       !!!sw only
+            7'b0100011: // S-Type    
                 begin
                     reg_write = mem_write = 1'b1;
                     mem_read = branch = 1'b0;
