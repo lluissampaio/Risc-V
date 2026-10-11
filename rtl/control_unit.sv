@@ -2,12 +2,14 @@ module control_unit (
     input  logic [6:0] opcode,
     input  logic [2:0] funct3,
     input  logic       funct7_5,
-    output logic       reg_write,
-    output logic       mem_write,
+    output logic       reg_write, 
+    output logic       mem_write, 
     output logic       mem_read,
     output logic       branch,
     output logic [3:0] alu_op,
-    output logic       alu_src
+    output logic       pc_src,
+    output logic       alu_src,
+    output logic       mem_to_reg
 );
     localparam logic [3:0] ALU_ADD  = 4'b0000,
                            ALU_SUB  = 4'b0001,
@@ -27,7 +29,9 @@ module control_unit (
         mem_read  = 1'b0;
         branch    = 1'b0;
         alu_op    = ALU_ADD;
+        pc_src    = 1'b0;
         alu_src   = 1'b0;
+        mem_to_reg = 1'b0;
         case (opcode) 
             7'b0110011: // R-Type
                 begin
@@ -35,7 +39,9 @@ module control_unit (
                     mem_write = 1'b0;
                     mem_read = 1'b0;
                     branch = 1'b0;
+                    pc_src = 1'b0;
                     alu_src = 1'b0; 
+                    mem_to_reg = 1'b0;
                     case (funct3)
                         3'b000: alu_op = funct7_5 == 1'b0 ? ALU_ADD : ALU_SUB; 
                         3'b100: alu_op = ALU_XOR; 
@@ -53,7 +59,9 @@ module control_unit (
                     mem_write = 1'b0;
                     mem_read = 1'b0;
                     branch = 1'b0;
+                    pc_src = 1'b0;
                     alu_src = 1'b1;
+                    mem_to_reg = 1'b0;
                     case (funct3)
                         3'b000: alu_op = ALU_ADD; 
                         3'b100: alu_op = ALU_XOR; 
@@ -72,6 +80,8 @@ module control_unit (
                     mem_write = 1'b0;
                     branch = 1'b0;
                     alu_src = 1'b1;
+                    pc_src = 1'b0;
+                    mem_to_reg = 1'b1;
                     alu_op = ALU_ADD;
                 end    
             7'b0100011: // S-Type    
@@ -81,6 +91,8 @@ module control_unit (
                     mem_read = 1'b0;
                     branch = 1'b0;
                     alu_src = 1'b1;
+                    pc_src = 1'b0;
+                    mem_to_reg = 1'b0;
                     alu_op = ALU_ADD;
                 end    
             7'b1100011:; // B-Type //TODO
