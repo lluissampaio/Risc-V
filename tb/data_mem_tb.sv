@@ -1,6 +1,7 @@
 module data_mem_tb;
     logic clk;
-    logic we;
+    logic mem_write;
+    logic mem_read;
     logic [2:0] funct3;
     logic [31:0] addr;
     logic [31:0] wd;
@@ -8,7 +9,8 @@ module data_mem_tb;
 
     data_mem dut (
         .clk(clk),
-        .mem_write(we),
+        .mem_write(mem_write),
+        .mem_read(mem_read),
         .funct3(funct3),
         .addr(addr),
         .wd(wd),
@@ -33,10 +35,11 @@ module data_mem_tb;
         addr = addr_in;
         wd = data_in;
         funct3 = funct3_in;
-        we = 1;
+        mem_write = 1;
+        mem_read = 0;
         @(posedge clk);
         #1;
-        we = 0;
+        mem_write = 0;
     endtask
 
     task read_mem(input logic [31:0] addr_in,
@@ -45,7 +48,8 @@ module data_mem_tb;
                   input string msg);
         addr = addr_in;
         funct3 = funct3_in;
-        we = 0;
+        mem_write = 0;
+        mem_read = 1;
         #1;
         check_read(expected, msg);
     endtask
@@ -54,7 +58,8 @@ module data_mem_tb;
         funct3 = 3'b000;
         addr = 32'h00000000;
         wd = 32'h00000000;
-        we = 0;
+        mem_write = 0;
+        mem_read = 0;
         #1;
 
         // 1) SW em 0x00 e LW em 0x00

@@ -1,6 +1,7 @@
 module data_mem( //leitura e escrita
     input logic clk,
     input logic mem_write,
+    input logic mem_read,
     input logic [2:0] funct3,
     input logic [31:0] addr, 
     input logic [31:0] wd,
@@ -38,29 +39,36 @@ module data_mem( //leitura e escrita
     end    
 
     always_comb begin
-        word = mem[addr[31:2]];
-        case (addr[1:0])
-            2'b00: 
-                begin 
-                    b = word[7:0]; 
-                    h = word[15:0];
-                end
-            2'b01: b = word[15:8];
-            2'b10: 
-                begin
-                    b = word[23:16]; 
-                    h = word[31:16];
-                end
-            2'b11: b = word[31:24];
-        endcase    
-        case (funct3)
-            3'b000: rd = {{24{b[7]}},b};//lb
-            3'b001: rd = {{16{h[15]}},h};//lh
-            3'b010: rd = word;//lw
-            3'b100: rd = {{24{1'b0}},b};//lbu
-            3'b101: rd = {{16{1'b0}},h};//lhu
-            default: rd = word;
-        endcase
+        if (mem_read) begin
+            word = mem[addr[31:2]];
+            case (addr[1:0])
+                2'b00: 
+                    begin 
+                        b = word[7:0]; 
+                        h = word[15:0];
+                    end
+                2'b01: b = word[15:8];
+                2'b10: 
+                    begin
+                        b = word[23:16]; 
+                        h = word[31:16];
+                    end
+                2'b11: b = word[31:24];
+            endcase    
+            case (funct3)
+                3'b000: rd = {{24{b[7]}},b};//lb
+                3'b001: rd = {{16{h[15]}},h};//lh
+                3'b010: rd = word;//lw
+                3'b100: rd = {{24{1'b0}},b};//lbu
+                3'b101: rd = {{16{1'b0}},h};//lhu
+                default: rd = word;
+            endcase
+        end else begin
+            word = 32'b0;
+            b = 8'b0;
+            h = 16'b0;
+            rd = 32'b0;
+        end
     end     
 
 endmodule
