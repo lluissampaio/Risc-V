@@ -95,7 +95,17 @@ module control_unit (
                     mem_to_reg = 1'b0;
                     alu_op = ALU_ADD;
                 end    
-            7'b1100011:; // B-Type //TODO
+            7'b1100011: // B-Type, only beq operations
+                begin
+                    reg_write = 1'b0;
+                    mem_write = 1'b0;
+                    mem_read = 1'b0;
+                    branch = 1'b1;
+                    alu_src = 1'b0;
+                    pc_src = 1'b1;
+                    mem_to_reg = 1'b0;
+                    alu_op = ALU_SUB;
+                end
             7'b1101111:; // U-Type //TODO
             7'b0010111:; // J-Type //TODO
             default: ; //keep default values

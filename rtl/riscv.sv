@@ -46,6 +46,7 @@ module riscv #( parameter PROGRAM_FILE = "tb/hex/program1.hex")(
     
     mux2 AluSrc(rd2,imm,alu_src,regB);
     mux2 MemtoReg(result,read_data,mem_to_reg,wd); 
-    mux2 PCSrc(pc + 32'd4,pc+imm,pc_src,pc_next);
+    mux2 PCSrc(pc + 32'd4,pc+imm,branch&zero,pc_next);
+    //for now pc_src is not being used
 
 endmodule
