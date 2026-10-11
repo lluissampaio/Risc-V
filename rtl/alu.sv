@@ -1,13 +1,13 @@
 module alu (
     input logic[31:0] regA,
     input logic[31:0] regB,
-    input logic[3:0] instr,
+    input logic[3:0] alu_op,
     output logic[31:0] res,  
     output logic zero_flag  
     );
 
     always_comb begin 
-        case (instr)
+        case (alu_op)
             4'b0000: res = regA + regB; // ADD
             4'b0001: res = regA - regB; // SUB
             4'b0010: res = regA & regB; // AND

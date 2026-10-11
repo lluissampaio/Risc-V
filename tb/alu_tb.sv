@@ -1,14 +1,14 @@
 module alu_tb;
     logic [31:0] regA;
     logic [31:0] regB;
-    logic [3:0] instr;
+    logic [3:0] alu_op;
     logic [31:0] res;
     logic zero_flag;
 
     alu dut (
         .regA(regA),
         .regB(regB),
-        .instr(instr),
+        .alu_op(alu_op),
         .res(res),
         .zero_flag(zero_flag)
     );
@@ -19,7 +19,7 @@ module alu_tb;
         begin
             regA = a;
             regB = b;
-            instr = op;
+            alu_op = op;
 
             #1;
 
