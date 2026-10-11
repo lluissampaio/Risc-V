@@ -1,5 +1,13 @@
 {
   "version": "2.0.0",
+  "inputs": [
+    {
+      "id": "programPath",
+      "type": "promptString",
+      "description": "File .hex (relative to the root of workspace)",
+      "default": "tb/hex/program1.hex"
+    }
+  ],
   "tasks": [
     {
       "label": "Compile e Simulate",
@@ -18,7 +26,18 @@
     {
       "label": "Compile & Simulate RISC-V",
       "type": "shell",
-      "command": "mkdir -p sim && iverilog -g2012 -s riscv_tb -o sim/riscv.out tb/riscv_tb.sv rtl/riscv.sv rtl/modules/*.sv && vvp sim/riscv.out",
+      "command": "test -f \"${input:programPath}\" && mkdir -p sim && iverilog -g2012 -s riscv_tb -P riscv_tb.PROGRAM_FILE='\"${input:programPath}\"' -o sim/riscv.out tb/riscv_tb.sv rtl/riscv.sv rtl/modules/*.sv && vvp sim/riscv.out",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Simulate all HEX programs in tb/hex",
+      "type": "shell",
+      "command": "mkdir -p sim || exit $?; found=0; for program in tb/hex/*.hex; do [ -f \"$program\" ] || continue; found=1; name=$(basename \"$program\" .hex); echo \"===== $program =====\"; iverilog -g2012 -s riscv_tb -P \"riscv_tb.PROGRAM_FILE=\\\"$program\\\"\" -o \"sim/$name.out\" tb/riscv_tb.sv rtl/riscv.sv rtl/modules/*.sv || exit $?; vvp \"sim/$name.out\" || exit $?; done; [ \"$found\" -eq 1 ] || { echo \"No .hex files found in tb/hex\"; exit 1; }",
       "group": "test",
       "presentation": {
         "reveal": "always",
