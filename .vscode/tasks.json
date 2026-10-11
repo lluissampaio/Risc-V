@@ -2,9 +2,9 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Compilar e Simular",
+      "label": "Compile e Simulate",
       "type": "shell",
-      "command": "iverilog -g2012 -o sim/${fileBasenameNoExtension}.out tb/${fileBasenameNoExtension}_tb.sv rtl/${fileBasenameNoExtension}.sv && vvp sim/${fileBasenameNoExtension}.out",
+      "command": "mkdir -p sim && iverilog -g2012 -o sim/${fileBasenameNoExtension}.out tb/modules/${fileBasenameNoExtension}_tb.sv rtl/modules/${fileBasenameNoExtension}.sv && vvp sim/${fileBasenameNoExtension}.out",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -16,7 +16,18 @@
       "problemMatcher": []
     },
     {
-      "label": "Abrir GTKWave",
+      "label": "Compile & Simulate RISC-V",
+      "type": "shell",
+      "command": "mkdir -p sim && iverilog -g2012 -s riscv_tb -o sim/riscv.out tb/riscv_tb.sv rtl/riscv.sv rtl/modules/*.sv && vvp sim/riscv.out",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Open GTKWave",
       "type": "shell",
       "command": "gtkwave sim/dump.vcd &",
       "group": "test",
