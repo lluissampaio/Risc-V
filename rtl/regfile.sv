@@ -1,5 +1,6 @@
 module regfile (
     input  logic        clk,
+    input  logic        reset,
     input  logic        we,           // write enable
     input  logic [4:0]  rs1, rs2,     // endereços de leitura
     input  logic [4:0]  rd,           // endereço de escrita
@@ -9,14 +10,20 @@ module regfile (
     logic [31:0] registers [0:31];
 
     always_comb begin
-        if (rd1 == 5'd0) rd1 = 32'd0;
+        if (rs1 == 5'd0) rd1 = 32'd0;
         else rd1 = registers [rs1];
-        if (rd2 == 5'd0) rd2 = 32'd0;
+        if (rs2 == 5'd0) rd2 = 32'd0;
         else rd2 = registers [rs2];
     end    
 
     always_ff @(posedge clk) begin
-        if (we && rd != 5'd0) registers[rd] <= wd; 
+        if (reset) begin
+            for (int i = 0; i < 32; i++) begin
+                registers[i] <= 32'd0;
+            end
+        end else if (we && rd != 5'd0) begin
+            registers[rd] <= wd;
+        end
     end    
 
 endmodule
