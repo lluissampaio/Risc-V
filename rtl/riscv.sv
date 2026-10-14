@@ -7,10 +7,11 @@ module riscv #( parameter PROGRAM_FILE = "tb/hex/program1.hex")(
     logic we;
     logic mem_write;
     logic mem_read;
-    logic [1:0] jump;
+    logic jump;
     logic [3:0] alu_op;
+    logic pc_src;
     logic alu_src;
-    logic [2:0] write_back;
+    logic mem_to_reg;
     
     // Input and Output Program Counter
     logic [31:0] pc_next;
@@ -33,22 +34,19 @@ module riscv #( parameter PROGRAM_FILE = "tb/hex/program1.hex")(
     // Imm generator module
     logic [31:0] imm;
 
-    logic [31:0] pc_4, pc_imm;
-
     assign regA = rd1;
-    assign pc_4 = pc + 4;
-    assign pc_imm = pc + imm;
     
     program_counter program_counter(clk,reset,pc_next,pc);
     instr_mem #(.PROGRAM_FILE(PROGRAM_FILE)) instr_mem(pc,instr);
     regfile regfile(clk, reset, we, instr[19:15], instr[24:20], instr[11:7], wd, rd1, rd2);
-    control_unit control(instr[6:0],instr[14:12],instr[30], we, mem_write,mem_read, jump, alu_op,alu_src, write_back);
+    control_unit control(instr[6:0],instr[14:12],instr[30], we, mem_write,mem_read, jump, alu_op,pc_src,alu_src, mem_to_reg);
     alu alu(regA,regB,alu_op,result,zero);
     data_mem data_mem(clk,mem_write,mem_read,instr[14:12],result,rd2,read_data);
     imm_generator imm_generator(instr,imm); 
-    jump_module jump_module(jump,zero,instr[14:12],pc_4,pc_imm,result,pc_next);
+    jump_module jump_module(jump,zero,funct3,pc_src);
     
     mux2 AluSrc(rd2,imm,alu_src,regB);
-    mux5 WriteBack(result,read_data,pc_4,pc_imm,imm,write_back,wd); 
+    mux2 MemtoReg(result,read_data,mem_to_reg,wd); 
+    mux2 PCSrc(pc + 32'd4,pc+imm,pc_src,pc_next);
 
 endmodule
