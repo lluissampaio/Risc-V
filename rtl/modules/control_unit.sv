@@ -5,7 +5,7 @@ module control_unit (
     output logic       reg_write, 
     output logic       mem_write, 
     output logic       mem_read,
-    output logic       branch,
+    output logic       jump,
     output logic [3:0] alu_op,
     output logic       pc_src,
     output logic       alu_src,
@@ -27,7 +27,7 @@ module control_unit (
         reg_write = 1'b0;
         mem_write = 1'b0;
         mem_read  = 1'b0;
-        branch    = 1'b0;
+        jump      = 1'b0;
         alu_op    = ALU_ADD;
         pc_src    = 1'b0;
         alu_src   = 1'b0;
@@ -38,7 +38,7 @@ module control_unit (
                     reg_write = 1'b1;
                     mem_write = 1'b0;
                     mem_read = 1'b0;
-                    branch = 1'b0;
+                    jump = 1'b0;
                     pc_src = 1'b0;
                     alu_src = 1'b0; 
                     mem_to_reg = 1'b0;
@@ -58,7 +58,7 @@ module control_unit (
                     reg_write = 1'b1;
                     mem_write = 1'b0;
                     mem_read = 1'b0;
-                    branch = 1'b0;
+                    jump = 1'b0;
                     pc_src = 1'b0;
                     alu_src = 1'b1;
                     mem_to_reg = 1'b0;
@@ -78,7 +78,7 @@ module control_unit (
                     reg_write = 1'b1;
                     mem_read = 1'b1;
                     mem_write = 1'b0;
-                    branch = 1'b0;
+                    jump = 1'b0;
                     alu_src = 1'b1;
                     pc_src = 1'b0;
                     mem_to_reg = 1'b1;
@@ -89,22 +89,30 @@ module control_unit (
                     reg_write = 1'b0;
                     mem_write = 1'b1;
                     mem_read = 1'b0;
-                    branch = 1'b0;
+                    jump = 1'b0;
                     alu_src = 1'b1;
                     pc_src = 1'b0;
                     mem_to_reg = 1'b0;
                     alu_op = ALU_ADD;
                 end    
-            7'b1100011: // B-Type, only beq operations
+            7'b1100011: // B-Type
                 begin
                     reg_write = 1'b0;
                     mem_write = 1'b0;
                     mem_read = 1'b0;
-                    branch = 1'b1;
+                    jump = 1'b1;
                     alu_src = 1'b0;
                     pc_src = 1'b1;
                     mem_to_reg = 1'b0;
-                    alu_op = ALU_SUB;
+                    case (funct3)
+                        3'b000: alu_op = ALU_SUB; //beq
+                        3'b001: alu_op = ALU_SUB; //bne ~beq
+                        3'b100: alu_op = ALU_SLT; //blt x1<x2
+                        3'b101: alu_op = ALU_SLT; //bge ~blt
+                        3'b100: alu_op = ALU_SLTU;//bltu
+                        3'b101: alu_op = ALU_SLTU;//bgeu ~bltu
+                        default: alu_op = ALU_SUB;;
+                    endcase 
                 end
             7'b1101111:; // U-Type //TODO
             7'b0010111:; // J-Type //TODO

@@ -5,7 +5,7 @@ module control_unit_tb;
     logic       reg_write;
     logic       mem_write;
     logic       mem_read;
-    logic       branch;
+    logic       jump;
     logic [3:0] alu_op;
     logic       pc_src;
     logic       alu_src;
@@ -18,7 +18,7 @@ module control_unit_tb;
         .reg_write(reg_write),
         .mem_write(mem_write),
         .mem_read(mem_read),
-        .branch(branch),
+        .jump(jump),
         .alu_op(alu_op),
         .pc_src(pc_src),
         .alu_src(alu_src),
@@ -41,7 +41,7 @@ module control_unit_tb;
                           input logic exp_reg_write,
                           input logic exp_mem_write,
                           input logic exp_mem_read,
-                          input logic exp_branch,
+                          input logic exp_jump,
                           input logic [3:0] exp_alu_op,
                           input logic exp_alu_src,
                           input logic exp_pc_src,
@@ -54,7 +54,7 @@ module control_unit_tb;
         #1;
 
         if (reg_write !== exp_reg_write || mem_write !== exp_mem_write ||
-            mem_read !== exp_mem_read || branch !== exp_branch ||
+            mem_read !== exp_mem_read || jump !== exp_jump ||
             alu_op !== exp_alu_op || alu_src !== exp_alu_src ||
             pc_src !== exp_pc_src || mem_to_reg !== exp_mem_to_reg) begin
             $error("%s: FALHOU", msg);
@@ -62,7 +62,7 @@ module control_unit_tb;
             $display("  reg_write: %b (esperado %b)", reg_write, exp_reg_write);
             $display("  mem_write: %b (esperado %b)", mem_write, exp_mem_write);
             $display("  mem_read: %b (esperado %b)", mem_read, exp_mem_read);
-            $display("  branch: %b (esperado %b)", branch, exp_branch);
+            $display("  jump: %b (esperado %b)", jump, exp_jump);
             $display("  alu_op: %b (esperado %b)", alu_op, exp_alu_op);
             $display("  alu_src: %b (esperado %b)", alu_src, exp_alu_src);
             $display("  pc_src: %b (esperado %b)", pc_src, exp_pc_src);
