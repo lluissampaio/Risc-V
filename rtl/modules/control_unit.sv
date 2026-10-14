@@ -5,11 +5,10 @@ module control_unit (
     output logic       reg_write, 
     output logic       mem_write, 
     output logic       mem_read,
-    output logic       jump,
+    output logic [1:0] jump,
     output logic [3:0] alu_op,
-    output logic       pc_src,
     output logic       alu_src,
-    output logic       mem_to_reg
+    output logic [2:0] write_back
 );
     localparam logic [3:0] ALU_ADD  = 4'b0000,
                            ALU_SUB  = 4'b0001,
@@ -27,21 +26,19 @@ module control_unit (
         reg_write = 1'b0;
         mem_write = 1'b0;
         mem_read  = 1'b0;
-        jump      = 1'b0;
+        jump      = 2'b00;
         alu_op    = ALU_ADD;
-        pc_src    = 1'b0;
         alu_src   = 1'b0;
-        mem_to_reg = 1'b0;
+        write_back= 3'b000;
         case (opcode) 
             7'b0110011: // R-Type
                 begin
                     reg_write = 1'b1;
                     mem_write = 1'b0;
                     mem_read = 1'b0;
-                    jump = 1'b0;
-                    pc_src = 1'b0;
+                    jump = 2'b00;
                     alu_src = 1'b0; 
-                    mem_to_reg = 1'b0;
+                    write_back = 3'b000;
                     case (funct3)
                         3'b000: alu_op = funct7_5 == 1'b0 ? ALU_ADD : ALU_SUB; 
                         3'b100: alu_op = ALU_XOR; 
@@ -58,10 +55,9 @@ module control_unit (
                     reg_write = 1'b1;
                     mem_write = 1'b0;
                     mem_read = 1'b0;
-                    jump = 1'b0;
-                    pc_src = 1'b0;
+                    jump = 2'b00;
                     alu_src = 1'b1;
-                    mem_to_reg = 1'b0;
+                    write_back = 3'b000;
                     case (funct3)
                         3'b000: alu_op = ALU_ADD; 
                         3'b100: alu_op = ALU_XOR; 
@@ -78,10 +74,9 @@ module control_unit (
                     reg_write = 1'b1;
                     mem_read = 1'b1;
                     mem_write = 1'b0;
-                    jump = 1'b0;
+                    jump = 2'b00;
                     alu_src = 1'b1;
-                    pc_src = 1'b0;
-                    mem_to_reg = 1'b1;
+                    write_back = 3'b001;
                     alu_op = ALU_ADD;
                 end    
             7'b0100011: // S-Type    
@@ -89,10 +84,9 @@ module control_unit (
                     reg_write = 1'b0;
                     mem_write = 1'b1;
                     mem_read = 1'b0;
-                    jump = 1'b0;
+                    jump = 2'b00;
                     alu_src = 1'b1;
-                    pc_src = 1'b0;
-                    mem_to_reg = 1'b0;
+                    write_back = 3'b000;
                     alu_op = ALU_ADD;
                 end    
             7'b1100011: // B-Type
@@ -100,22 +94,56 @@ module control_unit (
                     reg_write = 1'b0;
                     mem_write = 1'b0;
                     mem_read = 1'b0;
-                    jump = 1'b1;
+                    jump = 2'b01;
                     alu_src = 1'b0;
-                    pc_src = 1'b1;
-                    mem_to_reg = 1'b0;
+                    write_back = 3'b000;
                     case (funct3)
                         3'b000: alu_op = ALU_SUB; //beq
                         3'b001: alu_op = ALU_SUB; //bne ~beq
                         3'b100: alu_op = ALU_SLT; //blt x1<x2
                         3'b101: alu_op = ALU_SLT; //bge ~blt
-                        3'b100: alu_op = ALU_SLTU;//bltu
-                        3'b101: alu_op = ALU_SLTU;//bgeu ~bltu
-                        default: alu_op = ALU_SUB;;
+                        3'b110: alu_op = ALU_SLTU;//bltu
+                        3'b111: alu_op = ALU_SLTU;//bgeu ~bltu
+                        default: alu_op = ALU_SUB;
                     endcase 
                 end
-            7'b1101111:; // U-Type //TODO
-            7'b0010111:; // J-Type //TODO
+            7'b1101111: // J-Type 
+                begin
+                    reg_write = 1'b1;
+                    mem_write = 1'b0;
+                    mem_read = 1'b0;
+                    alu_src = 1'b0;
+                    write_back = 3'b010;
+                    jump = 2'b10;
+                end
+            7'b1100111: //jalr
+                begin
+                    reg_write = 1'b1;
+                    mem_write = 1'b0;
+                    mem_read = 1'b0;
+                    alu_src = 1'b1;
+                    write_back = 3'b010;
+                    jump= 2'b11;
+                    alu_op = ALU_ADD;
+                end
+            7'b0110111: //lui
+                begin
+                    reg_write = 1'b1;
+                    mem_write = 1'b0;
+                    mem_read = 1'b0;
+                    alu_src = 1'b0;
+                    write_back = 3'b100;
+                    jump= 2'b00;
+                end
+            7'b0010111: //auipc
+                begin
+                    reg_write = 1'b1;
+                    mem_write = 1'b0;
+                    mem_read = 1'b0;
+                    alu_src = 1'b0;
+                    write_back = 3'b011;
+                    jump = 2'b00;
+                end
             default: ; //keep default values
         endcase    
     end    
