@@ -199,11 +199,11 @@ As explained above, the first upgrade was removing the external `PCSrc` mux in f
 Verification was conducted at two levels using **Icarus Verilog 12.0**:
 
 1. **Unit-Level Verification (`tb/modules/*_tb.sv`):** Each hardware module was verified in isolation with self-checking SystemVerilog testbenches before top-level integration. Notably, [`control_unit_tb.sv`](tb/modules/control_unit_tb.sv) performs 86 automated assertions covering all 37 RV32I instructions plus invalid/`nop` opcodes.
-2. **System-Level Verification ([`tb/riscv_tb.sv`](tb/riscv_tb.sv)):** The top-level testbench loads a machine-code `.hex` program into instruction memory via the `PROGRAM_FILE` parameter, asserts `reset` for two clock cycles, runs the processor for 30 clock cycles, and dumps the final architectural state (`x0`–`x31`, `mem[0]`–`mem[3]`, and `PC`) to verify against expected execution results.
+2. **System-Level Verification ([`tb/riscv_tb.sv`](tb/riscv_tb.sv)):** The top-level self-checking testbench loads a machine-code `.hex` program into instruction memory via the `PROGRAM_FILE` parameter, asserts synchronous `reset` for two clock cycles, and advances cycle-by-cycle until a halt condition is reached (fetching `ecall`/`ebreak`, reaching the end of the loaded `.hex` instructions, or parking on a self-loop `pc_next == pc`, bounded by a `MAX_CYCLES` timeout). It then dumps the architectural state (`x0`–`x31`, `mem[0]`–`mem[3]`, `PC`, and cycle count) and automatically asserts all expected register, memory, and PC values.
 
 ### 6.2 System Test Programs
 
-#### 1. [`tb/hex/program1.hex`](tb/hex/program1.hex) (24 instructions) — ALU & Data Memory
+#### 1. [`tb/hex/program1.hex`](tb/hex/program1.hex) (24 instructions, 24 cycles) — ALU & Data Memory
 Tests R-type and I-type arithmetic, bitwise logic, logical/arithmetic shifts (`slli`, `srli`, `srai`), signed/unsigned comparisons (`slt`, `sltu`), word/half-word/byte stores (`sw`, `sh`, `sb`), and sign/zero-extended loads (`lw`, `lh`, `lhu`, `lb`, `lbu`).
 
 Final register and memory state:
@@ -215,17 +215,17 @@ Final register and memory state:
 | `x3` | `0000001E` | `x10` | `0000000F` | `x17` | `00A0140A` |
 | `x4` | `0000000A` | `x11` | `FFFFFFFF` | `x18` | `000000A0` |
 | `x5` | `00000000` | `x12` | `00000001` | `x0` | `00000000` |
-| `x6` | `0000001E` | `x13` | `00000000` | `PC` | `00000078` |
+| `x6` | `0000001E` | `x13` | `00000000` | `PC` | `00000060` |
 | `x7` | `0000001E` | `x14` | `0000001E` | | |
 
 Data memory: `mem[0] = 0000001E`, `mem[1] = FFFFFFFF`, `mem[2] = 00A0140A`.
 
-#### 2. [`tb/hex/program2.hex`](tb/hex/program2.hex) (15 instructions) — Conditional Branch & Loop
+#### 2. [`tb/hex/program2.hex`](tb/hex/program2.hex) (15 instructions, 18 cycles) — Conditional Branch & Loop
 Tests forward and backward `beq` branches (taken and not taken) and a bounded loop counter (`x8` incrementing up to `x9 = 3`), parking at `PC = 00000038` after writing `42` (`0x2A`) to `x10`.
 
 Final state: `x1 = 00000005`, `x2 = 00000005`, `x3 = 00000000`, `x4 = 00000001`, `x5 = 00000007`, `x6 = 00000002`, `x8 = 00000003`, `x9 = 00000003`, `x10 = 0000002A`, `PC = 00000038`.
 
-#### 3. [`tb/hex/program3.hex`](tb/hex/program3.hex) (26 instructions) — Full Control Flow & Upper Immediates
+#### 3. [`tb/hex/program3.hex`](tb/hex/program3.hex) (26 instructions, 18 cycles) — Full Control Flow & Upper Immediates
 Covers all 6 conditional branches (`beq`, `bne`, `blt`, `bge`, `bltu`, `bgeu` — both taken and not taken, signed and unsigned), `jal`, `jalr`, `lui`, and `auipc`. Skipped instructions attempt to write `99` (`0x63`) to `x20`, so any faulty branch or jump is immediately caught if `x20 != 0`.
 
 Final state:
