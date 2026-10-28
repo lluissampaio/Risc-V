@@ -101,7 +101,7 @@ module jump_module_tb;
         // boundary values
         check_case(2'b10, 3'b000, 1'b0, 32'hFFFFFFFF, 32'h7FFFFFFF, 32'h80000000, 32'h7FFFFFFF, "jal with maximum values");
 
-        check_case(2'b11, 3'b000, 1'b0, 32'h00000000, 32'h00000000, 32'hFFFFFFFF, 32'hFFFFFFFF, "jalr with maximum alu_result");
+        check_case(2'b11, 3'b000, 1'b0, 32'h00000000, 32'h00000000, 32'hFFFFFFFF, 32'hFFFFFFFE, "jalr with maximum alu_result (LSB cleared)");
 
         // same value for pc_4 and pc_imm
         check_case(2'b10, 3'b000, 1'b0, 32'h00001000, 32'h00001000, 32'h00002000, 32'h00001000, "jal when pc_imm == pc_4");

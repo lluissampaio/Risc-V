@@ -22,7 +22,7 @@ module jump_module(
                     endcase    
                 end
             2'b10: pc_next = pc_imm; // Basic pc+imm instruction
-            2'b11: pc_next = alu_result; // jalr instruction
+            2'b11: pc_next = {alu_result[31:1], 1'b0}; // jalr instruction (LSb forced to 0)
         endcase
     end
 
