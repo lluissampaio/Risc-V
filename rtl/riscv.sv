@@ -44,7 +44,7 @@ module riscv #( parameter PROGRAM_FILE = "tb/hex/program1.hex")(
     regfile regfile(clk, reset, we, instr[19:15], instr[24:20], instr[11:7], wd, rd1, rd2);
     control_unit control(instr[6:0],instr[14:12],instr[30], we, mem_write,mem_read, jump, alu_op,alu_src, write_back);
     alu alu(regA,regB,alu_op,result,zero);
-    data_mem data_mem(clk,mem_write,mem_read,instr[14:12],result,rd2,read_data);
+    data_mem #(.PROGRAM_FILE(PROGRAM_FILE)) data_mem(clk,mem_write,mem_read,instr[14:12],result,rd2,read_data);
     imm_generator imm_generator(instr,imm); 
     jump_module jump_module(jump,zero,instr[14:12],pc_4,pc_imm,result,pc_next);
     

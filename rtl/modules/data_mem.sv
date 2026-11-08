@@ -1,4 +1,4 @@
-module data_mem( //leitura e escrita
+module data_mem #( parameter PROGRAM_FILE = "" )( //leitura e escrita
     input logic clk,
     input logic mem_write,
     input logic mem_read,
@@ -8,10 +8,14 @@ module data_mem( //leitura e escrita
     output logic [31:0] rd
 );
 
-    logic [31:0] mem [0:1023];
+    logic [31:0] mem [0:4095];
     logic [7:0]  b;
     logic [15:0] h;
     logic [31:0] word;
+
+    initial begin
+        if (PROGRAM_FILE != "") $readmemh(PROGRAM_FILE, mem);
+    end
 
     always_ff @(posedge clk) begin
         if (mem_write==1'b1) begin
