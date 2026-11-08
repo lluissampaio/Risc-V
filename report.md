@@ -85,6 +85,7 @@ In a single-cycle processor, all five logical phases of instruction execution (F
 
 **Main design choices:**
 
+- **Harvard Architecture with Von Neumann Memory Image Compatibility:** At the hardware level, the processor operates as a **Harvard architecture** with physically separate instruction memory ([`instr_mem.sv`](rtl/modules/instr_mem.sv)) and data memory ([`data_mem.sv`](rtl/modules/data_mem.sv)), enabling simultaneous instruction fetch and data access within a single clock cycle. At the same time, because both memories can initialize from the same unified `PROGRAM_FILE` image (containing both `.text` instructions and `.data` constants), the core seamlessly supports programs compiled for a **Von Neumann (unified memory)** memory map, such as the official `riscv-tests` suite.
 - **Separation of control and datapath:** [`control_unit.sv`](rtl/modules/control_unit.sv) decodes the instruction fields and generates control signals, while datapath modules only route and compute data.
 - **Dedicated PC adders:** In addition to the main ALU, two combinational adders compute `pc_4 = pc + 4` and `pc_imm = pc + imm`.
   - `pc_4` is reused as the link address written back to `rd` by `jal` and `jalr`.
@@ -100,7 +101,7 @@ A 32-bit register with synchronous active-high reset. On each rising clock edge,
 
 ### 5.2 `instr_mem` ([`rtl/modules/instr_mem.sv`](rtl/modules/instr_mem.sv))
 
-A 256-word (1 KB) read-only instruction memory initialized at simulation start from a hexadecimal file via `$readmemh(PROGRAM_FILE, mem)`. Reads are purely combinational (`instr = mem[addr[31:2]]`).
+A 4096-word (16 KB) read-only instruction memory initialized at simulation start from a hexadecimal file via `$readmemh(PROGRAM_FILE, mem)`. Reads are purely combinational (`instr = mem[addr[31:2]]`).
 
 ### 5.3 `control_unit` ([`rtl/modules/control_unit.sv`](rtl/modules/control_unit.sv))
 
@@ -141,7 +142,7 @@ Bit 30 (`funct7_5`) is inspected only when required by the RV32I encoding: R-typ
 
 ### 5.6 `data_mem` ([`rtl/modules/data_mem.sv`](rtl/modules/data_mem.sv))
 
-A 1024-word (4 KB) byte-addressable RAM. Reads are combinational (gated by `mem_read`) and writes are synchronous on `posedge clk` (gated by `mem_write`). `funct3` determines the access width and sign/zero extension:
+A 4096-word (16 KB) byte-addressable RAM. Reads are combinational (gated by `mem_read`) and writes are synchronous on `posedge clk` (gated by `mem_write`). When `PROGRAM_FILE` is specified, `data_mem` also initializes from `$readmemh(PROGRAM_FILE, mem)` so pre-populated `.data` sections in unified Von Neumann binaries are immediately accessible to load/store instructions. `funct3` determines the access width and sign/zero extension:
 
 | `funct3` | Load | Store | Behavior |
 |---|---|---|---|
@@ -245,20 +246,27 @@ Final state:
 | `x20` | `00000000` | Error sentinel (`0` confirms no wrong branch/jump occurred) |
 | `PC` | `00000064` | Parked on infinite loop (`jal x0, 0`) |
 
+#### 4. Official `riscv-tests` (`rv32ui`) Suite ([`tb/riscv_tests/`](tb/riscv_tests/)) — 38 Compliance Programs
+In addition to the custom test programs above, the processor was verified against all **38 official `rv32ui` assembly tests** from [`riscv-software-src/riscv-tests`](https://github.com/riscv-software-src/riscv-tests) (`simple`, `add`, `addi`, `and`, `andi`, `auipc`, `beq`, `bge`, `bgeu`, `blt`, `bltu`, `bne`, `jal`, `jalr`, `lb`, `lbu`, `lh`, `lhu`, `lui`, `lw`, `or`, `ori`, `sb`, `sh`, `sw`, `sll`, `slli`, `slt`, `slti`, `sltiu`, `sltu`, `sra`, `srai`, `srl`, `srli`, `sub`, `xor`, `xori`).
+
+Each official `.S` test is compiled with `riscv64-unknown-elf-gcc` (`-march=rv32i -mabi=ilp32`) using a bare-metal header ([`tb/riscv_tests/riscv_test.h`](tb/riscv_tests/riscv_test.h)) and linker script ([`tb/riscv_tests/link.ld`](tb/riscv_tests/link.ld)). On completion, `RVTEST_PASS` sets `a0` (`x10`) to `0` and executes `ecall` (`0x00000073`), which [`tb/riscv_tb.sv`](tb/riscv_tb.sv) traps and verifies.
+
 ### 6.3 Results Summary
 
 | Test Suite / Program | Target | Result |
 |---|---|---|
 | `alu_tb`, `control_unit_tb` (86 checks), `data_mem_tb`, `imm_generator_tb`, `jump_module_tb`, `program_counter_tb`, `regfile_tb` | Unit modules | **PASS** |
-| [`tb/hex/program1.hex`](tb/hex/program1.hex) | System (`riscv_tb`) — ALU & Load/Store | **PASS** |
-| [`tb/hex/program2.hex`](tb/hex/program2.hex) | System (`riscv_tb`) — Branches & Loop | **PASS** |
-| [`tb/hex/program3.hex`](tb/hex/program3.hex) | System (`riscv_tb`) — All Branches, `jal`, `jalr`, `lui`, `auipc` | **PASS** |
+| [`tb/hex/program1.hex`](tb/hex/program1.hex) | System (`riscv_tb`) — ALU & Load/Store (24 cycles) | **PASS** |
+| [`tb/hex/program2.hex`](tb/hex/program2.hex) | System (`riscv_tb`) — Branches & Loop (18 cycles) | **PASS** |
+| [`tb/hex/program3.hex`](tb/hex/program3.hex) | System (`riscv_tb`) — All Branches, `jal`, `jalr`, `lui`, `auipc` (18 cycles) | **PASS** |
+| **Official `riscv-tests` (`rv32ui`)** | System (`riscv_tb`) — **38 / 38 official compliance tests** | **PASS (38/38)** |
 | **Simulator** | Icarus Verilog (`iverilog`) 12.0 (`-g2012`) | — |
 
 ### 6.4 Bugs Found and Fixed During Development
 
 - **Duplicate case labels in branch decoding:** Initially, `bltu` and `bgeu` in `control_unit` and `jump_module` mistakenly repeated the `funct3` encodings of `blt` and `bge` (`100` and `101`) instead of `110` and `111`. Detected with [`program3.hex`](tb/hex/program3.hex).
 - **Missing default assignments in `always_comb`:** Inferred latches and unknown (`x`) PC propagation occurred when certain control paths lacked default values. Fixed by initializing all combinational outputs at the top of every `always_comb` block.
+- **Clearing the LSB on `jalr` target address:** Per the RV32I specification, `jalr` computes `(rs1 + imm) & ~1` (`{alu_result[31:1], 1'b0}`). Updated in [`jump_module.sv`](rtl/modules/jump_module.sv) and verified with `rv32ui/jalr.S`.
 
 ## 7. How to Build and Run
 
@@ -276,6 +284,9 @@ vvp sim/riscv.out
 # Run program3.hex (full control-flow & upper-immediate test)
 iverilog -g2012 -P riscv_tb.PROGRAM_FILE=\"tb/hex/program3.hex\" -o sim/riscv.out rtl/riscv.sv rtl/modules/*.sv tb/riscv_tb.sv
 vvp sim/riscv.out
+
+# Compile and run all 38 official riscv-tests (rv32ui)
+./tb/riscv_tests/run_riscv_tests.sh
 
 # Run a unit testbench (example: control_unit)
 iverilog -g2012 -o sim/control_unit.out rtl/modules/control_unit.sv tb/modules/control_unit_tb.sv
@@ -309,7 +320,12 @@ Risc-V/
 │   ├── hex/
 │   │   ├── program1.hex
 │   │   ├── program2.hex
-│   │   └── program3.hex
+│   │   ├── program3.hex
+│   │   └── rv32ui/               # Compiled official riscv-tests (.hex)
+│   ├── riscv_tests/
+│   │   ├── link.ld
+│   │   ├── riscv_test.h
+│   │   └── run_riscv_tests.sh
 │   └── modules/
 │       ├── alu_tb.sv
 │       ├── control_unit_tb.sv
@@ -326,7 +342,7 @@ Risc-V/
 
 - **5-Stage Pipelined Processor:** Evolve the repository into a modular structure sharing common datapath blocks (`alu`, `regfile`, `imm_generator`, memories) alongside a 5-stage pipeline (`IF`, `ID`, `EX`, `MEM`, `WB`) with data forwarding and hazard detection units.
 - **Multi-Cycle Processor:** Implement a finite-state machine (FSM) controller sharing functional units across cycles.
-- **Official RISC-V Compliance Suite & C Toolchain:** Compile C programs using `riscv32-unknown-elf-gcc` (`-march=rv32i -mabi=ilp32`) and run the `rv32ui` test suite.
+- **C Program Execution:** Compile standalone C benchmark programs using `riscv64-unknown-elf-gcc` (`-march=rv32i -mabi=ilp32`) with a startup `crt0.S` and run them on the processor.
 - **M Extension & FPGA Synthesis:** Add hardware multiplication/division and synthesize the core onto an FPGA board.
 
 ## 10. References

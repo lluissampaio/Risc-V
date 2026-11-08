@@ -1,1 +1,3 @@
-/sim/*.out
+/sim/*
+!/sim/.gitkeep
+/tb/riscv_tests/riscv-tests-src/
